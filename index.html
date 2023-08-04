@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>URL Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        label {
+            font-size: 18px;
+            margin-right: 10px;
+        }
+
+        input[type="text"] {
+            padding: 5px;
+            font-size: 16px;
+            width: 300px;
+        }
+
+        button {
+            padding: 8px 15px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .copyButton {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>URL Converter</h1>
+        <label for="inputText">Enter Text:</label>
+        <input type="text" id="inputText" />
+        <button onclick="convertToUrl()">Convert</button>
+        <button onclick="copyToClipboard()">Copy URL</button>
+        <button onclick="clearHistory()">Clear History</button>
+        <p>Converted URL: <span id="outputUrl"></span></p>
+
+        <h2>Converted URL List:</h2>
+        <table>
+            <tr>
+                <th>Original Text</th>
+                <th>Converted URL</th>
+                <th>Date</th>
+                <th>Copy</th>
+            </tr>
+            <tbody id="urlListBody">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function convertToUrl() {
+            const inputText = document.getElementById('inputText').value;
+            const convertedUrl = inputText.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            document.getElementById('outputUrl').textContent = convertedUrl;
+
+            const currentDate = new Date().toLocaleString();
+            addToUrlList(inputText, convertedUrl, currentDate);
+
+            // Save the history to localStorage
+            saveHistoryToLocalStorage(inputText, convertedUrl, currentDate);
+        }
+
+        function addToUrlList(originalText, convertedUrl, date) {
+            const urlListTable = document.getElementById('urlListBody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>${originalText}</td>
+                <td>${convertedUrl}</td>
+                <td>${date}</td>
+                <td><button class="copyButton" onclick="copySingleUrl('${convertedUrl}')">Copy</button></td>
+            `;
+            urlListTable.appendChild(newRow);
+        }
+
+        function copyToClipboard() {
+            const convertedUrl = document.getElementById('outputUrl').textContent;
+            if (convertedUrl) {
+                const tempInput = document.createElement('input');
+                tempInput.value = convertedUrl;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                alert('URL copied to clipboard: ' + convertedUrl);
+            } else {
+                alert('Please convert the URL first.');
+            }
+        }
+
+        function copySingleUrl(url) {
+            const tempInput = document.createElement('input');
+            tempInput.value = url;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            alert('URL copied to clipboard: ' + url);
+        }
+
+        function saveHistoryToLocalStorage(originalText, convertedUrl, date) {
+            const history = JSON.parse(localStorage.getItem('history') || '[]');
+            history.push({ originalText, convertedUrl, date });
+            localStorage.setItem('history', JSON.stringify(history));
+        }
+
+        function displayHistoryFromLocalStorage() {
+            const history = JSON.parse(localStorage.getItem('history') || '[]');
+            for (const entry of history) {
+                addToUrlList(entry.originalText, entry.convertedUrl, entry.date);
+            }
+        }
+
+        function clearHistory() {
+            localStorage.removeItem('history');
+            const urlListTable = document.getElementById('urlListBody');
+            urlListTable.innerHTML = ''; // Clear the table content
+        }
+
+        // Display the saved history on page load
+        displayHistoryFromLocalStorage();
+    </script>
+</body>
+</html>
